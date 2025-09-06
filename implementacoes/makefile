@@ -1,36 +1,42 @@
-# Detecção do sistema (32 || 64 bits)
+#detecta se o sistema é de 32 ou 64 bits
 BITS_OPTION = -m64
 
-# Definição do compilador (GCC++)
+#### define o compilador
 CPPC = g++
+#############################
 
-# Opções de compilação e includes
+#### opcoes de compilacao e includes
 CCOPT = $(BITS_OPTION) -O3 -fPIC -fexceptions -DNDEBUG -DIL_STD -std=c++0x
 CONCERTINCDIR = $(CONCERTDIR)/include
 CCFLAGS = $(CCOPT)
+#############################
 
-# Diretórios dos códigos fontes e objetos (src e obj respectivamente)
-SRCDIR = src 
+#### flags do linker
+#############################
+
+#### diretorios com os source files e com os objs files
+SRCDIR = src
 OBJDIR = obj
+#############################
 
-# Lista de arquivos
-SRCS = $(wildcard $(SRCDIR)/*.cpp)                           # Pega todos os .cpp dentro de src
-OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))   # Converte cada .cpp em .o correspondente dentro de obj
+#### lista de todos os srcs e todos os objs
+SRCS = $(wildcard $(SRCDIR)/*.cpp)
+OBJS = $(patsubst $(SRCDIR)/%.cpp, $(OBJDIR)/%.o, $(SRCS))
+#############################
 
-# Executável 
-tsp: $(OBJS) # depende de todos os objetos ($(OBJS)), se algum objeto estiver desatualizado, ele recompila antes de linkar.
+#### regra principal, gera o executavel
+tsp: $(OBJS) 
 	@echo  "\033[31m \nLinking all objects files: \033[0m"
 	$(CPPC) $(BITS_OPTION) $(OBJS) -o $@ $(CCLNFLAGS)
-    # $(CPPC): comando de linkagem: gera o executável tsp
-    # $@: nome do tsp
-    # $(CCLNFLAGS): flags do linker 
+############################
 
-# Inclusão de dependências
-# Para cada obj, tenta incluir o .d correspondente (.d: dependências do headers)
+#inclui os arquivos de dependencias
 -include $(OBJS:.o=.d)
 
-# Regra para compilar objetos: compila o .cpp em .o e cria arquivo de dependências .d.
+#regra para cada arquivo objeto: compila e gera o arquivo de dependencias do arquivo objeto
+#cada arquivo objeto depende do .c e dos headers (informacao dos header esta no arquivo de dependencias gerado pelo compiler)
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p obj
 	@echo  "\033[31m \nCompiling $<: \033[0m"
 	$(CPPC) $(CCFLAGS) -c $< -o $@
 	@echo  "\033[32m \ncreating $< dependency file: \033[0m"
@@ -39,10 +45,10 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 	@sed -e 's|.*:|$(basename $@).o:|' < $(basename $@).d.tmp > $(basename $@).d
 	@rm -f $(basename $@).d.tmp
 
-# Limpar arquivos gerados (Remove o executável tsp, .o e .d)
+#delete objetos e arquivos de dependencia
 clean:
 	@echo "\033[31mcleaning obj directory \033[0m"
 	@rm tsp -f $(OBJDIR)/*.o $(OBJDIR)/*.d
 
-# Recompila tudo
+
 rebuild: clean tsp
